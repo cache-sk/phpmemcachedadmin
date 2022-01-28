@@ -28,6 +28,8 @@ class Library_Configuration_Loader
 
     # Configuration file
     protected static $_iniPath = './Config/Memcache.php';
+    
+    const DEFAULT_CLUSTER = 'Default';    
 
     # Configuration needed keys and default values
     protected static $_iniKeys = array('stats_api' => 'Server',
@@ -44,10 +46,13 @@ class Library_Configuration_Loader
         'hit_rate_alert' => 90,
         'eviction_alert' => 0,
         'file_path' => 'Temp/',
-        'servers' => array('Default' => array('127.0.0.1:11211' => array('hostname' => '127.0.0.1', 'port' => 11211))));
+        'servers' => array(self::DEFAULT_CLUSTER => array('127.0.0.1:11211' => array('hostname' => '127.0.0.1', 'port' => 11211))));
 
     # Storage
     protected static $_ini = array();
+    
+    # Kube servers
+    protected static $_servers = array();
 
     /**
      * Constructor, load configuration file and parse server list
@@ -56,14 +61,36 @@ class Library_Configuration_Loader
      */
     protected function __construct()
     {
+        
+        $hostname = getenv("MEMCACHED_HEADLESS_SERVICE");
+        if ($hostname){
+            $dns_records = dns_get_record($hostname, DNS_A);
+            if ($dns_records) {
+                foreach($dns_records as $server){
+                    $srvhost = $server["ip"].":11211";
+                    self::$_servers[$srvhost] = array (
+                        'hostname' => $server["ip"],
+                        'port' => '11211',
+                    );
+                }
+                ksort(self::$_servers);
+            }
+        }
+        
         # Checking ini File
         if (file_exists(self::$_iniPath)) {
             # Opening ini file
             self::$_ini = require self::$_iniPath;
+            self::$_ini['servers'][self::DEFAULT_CLUSTER] = self::$_servers;
         } else {
             # Fallback
             self::$_ini = self::$_iniKeys;
+            if (self::$_servers) {
+                self::$_ini['servers'] = array( self::DEFAULT_CLUSTER => self::$_servers );
+            }
         }
+        
+        
     }
 
     /**
@@ -179,7 +206,11 @@ class Library_Configuration_Loader
     public function write()
     {
         if ($this->check()) {
-            return is_numeric(file_put_contents(self::$_iniPath, '<?php' . PHP_EOL . 'return ' . var_export(self::$_ini, true) . ';'));
+            $to_save = self::$_ini;
+            if (self::$_servers){
+                unset($to_save['servers'][self::DEFAULT_CLUSTER]);
+            }
+            return is_numeric(file_put_contents(self::$_iniPath, '<?php' . PHP_EOL . 'return ' . var_export($to_save, true) . ';'));
         }
         return false;
     }

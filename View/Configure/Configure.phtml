@@ -24,11 +24,11 @@
                 <span class="left">Eviction Alert</span>
                 <span class="right"><input type="text" name="eviction_alert" value="<?php echo $_ini->get('eviction_alert'); ?>"/></span>
             </div>
-            <div class="line">
+<?php /*            <div class="line">
                 <span class="left">Temp Path</span>
                 <span class="right"><input type="text" name="file_path" value="<?php echo $_ini->get('file_path'); ?>"/></span>
             </div>
-            <div class="line" style="text-align:center;">
+*/ ?>            <div class="line" style="text-align:center;">
                 <hr/>
                 <input class="list" type="submit" value="Save Live Configuration"/>
             </div>
@@ -75,10 +75,11 @@
             # Looking into each cluster
             foreach($_ini->get('servers') as $cluster => $servers)
             {
+		$readonly = $cluster == $_ini::DEFAULT_CLUSTER ? " readonly" : "";
                 $cluster_id++; ?>
             <div id="cluster_<?php echo $cluster_id; ?>">
                 <hr/>
-                <strong>Cluster <input type="text" style="width:200px;" name="cluster[<?php echo $cluster_id; ?>]" value="<?php echo $cluster; ?>"/></strong>
+                <strong>Cluster <input type="text" style="width:200px;" name="cluster[<?php echo $cluster_id; ?>]" value="<?php echo $cluster; ?>"<?php echo $readonly; ?>/></strong>
                 <div style="margin-left:30px;margin-top:3px;">
                     <div style="width:150px;float:left;">Name (Optional)</div>
                     <div style="width:150px;float:left;margin-left:7px;">IP/Hostname</div>
@@ -93,7 +94,7 @@
                         <input type="text" style="width:150px;" name="server[<?php echo $cluster_id; ?>][<?php echo $server_id; ?>][name]"
                                value="<?php echo $name; ?>"
                                id="name_<?php echo $server_id; ?>"
-                               onchange="nameOnChange(<?php echo $server_id; ?>)"/>
+                               onchange="nameOnChange(<?php echo $server_id; ?>)"<?php echo $readonly; ?>/>
                         <input type="text" style="width:150px;" name="server[<?php echo $cluster_id; ?>][<?php echo $server_id; ?>][hostname]"
                                value="<?php echo $server['hostname']; ?>"
                                id="host_<?php echo $server_id; ?>"
@@ -104,7 +105,7 @@
                         <?php
                         } ?>
                                onfocus="hostOnFocus(this)"
-                               onblur="hostOnBlur(this)"/>
+                               onblur="hostOnBlur(this)"<?php echo $readonly; ?>/>
                         <input type="text" style="width:50px;" name="server[<?php echo $cluster_id; ?>][<?php echo $server_id; ?>][port]"
                                value="<?php echo $server['port']; ?>"
                                id="port_<?php echo $server_id; ?>"
@@ -115,16 +116,20 @@
                         <?php
                         } ?>
                                onfocus="portOnFocus(this)"
-                               onblur="portOnBlur(this)"/>
+                               onblur="portOnBlur(this)"<?php echo $readonly; ?>/>
+			<?php if(!$readonly) { ?>
                         <a class="list button" style="padding:1px 2px;" href="#" onclick="deleteServerOrCluster('server_<?php echo $server_id; ?>')">Delete</a>
+			<?php } ?>
                     </div>
                 </div>
 <?php           } ?>
+<?php if(!$readonly) { ?>
                 <div id="cluster_<?php echo $cluster_id; ?>_commands" style="margin-left:40px;margin-top:6px;">
                     <a class="list button" href="javascript:addServer(<?php echo $cluster_id; ?>)">Add New Server to Cluster</a>
                     <a class="list" style="padding:1px 2px;-moz-border-radius:3px;-webkit-border-radius:3px;" href="#"
                        onclick="deleteServerOrCluster('cluster_<?php echo $cluster_id; ?>')">Delete Cluster</a>
                 </div>
+<?php } ?>
                 <br/>
             </div>
 <?php       } ?>

@@ -43,7 +43,7 @@ switch ($request) {
         $_ini->set('memory_alert', $_POST['memory_alert']);
         $_ini->set('hit_rate_alert', $_POST['hit_rate_alert']);
         $_ini->set('eviction_alert', $_POST['eviction_alert']);
-        $_ini->set('file_path', $_POST['file_path']);
+        //$_ini->set('file_path', $_POST['file_path']); //fixed to temp/
 
         # Writing configuration file
         $write = Library_Configuration_Loader::singleton()->write();
@@ -67,10 +67,12 @@ switch ($request) {
     # Server configuration save
     case 'servers' :
         $array = array();
-        foreach ($_POST['server'] as $cluster => $servers) {
-            foreach ($servers as $data) {
-                $array[$_POST['cluster'][$cluster]][$data['name']] = $data;
-                unset($array[$_POST['cluster'][$cluster]][$data['name']]['name']);
+        if ($_POST['server']){
+            foreach ($_POST['server'] as $cluster => $servers) {
+                foreach ($servers as $data) {
+                    $array[$_POST['cluster'][$cluster]][$data['name']] = $data;
+                    unset($array[$_POST['cluster'][$cluster]][$data['name']]['name']);
+                }
             }
         }
 

@@ -12,9 +12,20 @@ if (defined('ENT_IGNORE') === false) {
 }
 
 # XSS / User input check
-foreach ($_REQUEST as $index => $data) {
-    $_REQUEST[$index] = htmlentities($data);
+function XssClearRequestArray($arr){
+    foreach ($arr as $index => $data) {
+        if(is_array($data)) {
+            $arr[$index] = XssClearRequestArray($data);
+        } else {
+            $arr[$index] = htmlentities($data);
+        }
+    }
+    return $arr;
 }
+XssClearRequestArray($_REQUEST);
+XssClearRequestArray($_POST);
+XssClearRequestArray($_GET);
+XssClearRequestArray($_COOKIE);
 
 # Autoloader
 function autoloader($class)
